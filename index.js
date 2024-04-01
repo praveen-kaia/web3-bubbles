@@ -1174,6 +1174,7 @@ let progressUpdateTime = 50,
   selectedBubbleSize = "performance",
   selectedBubbleColorScheme = "green-red";
 
+  let praveen = 0;
 function drawBubble(_bubbleData) {
   // Retrieve bubble properties
   let radius = _bubbleData["radius"];
@@ -1194,6 +1195,25 @@ function drawBubble(_bubbleData) {
       2 * Math["PI"],
       false
     );
+  try {
+    // Create gradient for bubble fill
+    var gradient = ctx.createRadialGradient(
+      _bubbleData["x"],
+      _bubbleData["y"],
+      0.45 * radius,
+      _bubbleData["x"],
+      _bubbleData["y"],
+      radius
+    );
+  } catch(err) {
+    // console.log(err);
+    // console.log(_bubbleData)
+    return;
+  }
+  // if(praveen == 0) {
+  //   console.log(_bubbleData)
+  //   praveen++;
+  // }
 
   // Create gradient for bubble fill
   var gradient = ctx.createRadialGradient(
@@ -1270,6 +1290,7 @@ function createBubbles() {
       timeRangeDropdown.selectedIndex
     ].value.toLowerCase();
   let selectedBubbleSize = getSelectedBubbleSize();
+  console.log("Selected Bubble Size ->  "+selectedBubbleSize)
   let bubbleRadii = calculateCircleRadii(
     data.map((_item) =>
       "performance" === selectedBubbleSize
@@ -1291,7 +1312,7 @@ function createBubbles() {
     .filter((_item) => parseFloat(_item[timeRangeValue]) > 0)
     .map((_item) => parseFloat(_item[timeRangeValue]))
     .sort(function (a, b) {
-      return +a - +b;
+      return a - b;
     })
     .reverse()
     .slice(0, 3);
@@ -1300,7 +1321,7 @@ function createBubbles() {
     .filter((_item) => _item[timeRangeValue] < 0)
     .map((_item) => _item[timeRangeValue])
     .sort(function (a, b) {
-      return +a - +b;
+      return a - b;
     })
     .slice(0, 3);
 
@@ -1308,7 +1329,8 @@ function createBubbles() {
     timeRangeValue,
     selectedBubbleSize
   );
-
+  console.log("BUBBLE RADII -> ");
+  console.log(bubbleRadii)
   data.forEach((_item) => {
     let bubbleRadius =
       bubbleRadii[
@@ -1316,6 +1338,7 @@ function createBubbles() {
           ? _item[valueToUseForRadius]
           : -1 * _item[valueToUseForRadius]
       ];
+    
     var bubbleColor =
       _item[timeRangeValue] >= 0
         ? colorSchemes[selectedBubbleColorScheme]["positive"]
@@ -1360,16 +1383,20 @@ function getRandomDecimalBetween(minValue, maxValue) {
 }
 
 function getBubbleContentValue(value, volume24h, marketCap, price) {
-  if ("performance" === selectedBubbleContent) {
-    return value.toString().charAt(0) !== "-" ? "+" + value + "%" : value + "%";
-  } else if (selectedBubbleContent === "volume") {
-    return "$" + formatCurrency(volume24h);
-  } else if (selectedBubbleContent === "market cap") {
-    return "$" + formatCurrency(marketCap);
-  } else if (selectedBubbleContent === "price") {
-    return "$" + Math.floor(100 * (price + Number.EPSILON)) / 100;
-  } else {
-    return undefined;
+  try {
+    if ("performance" === selectedBubbleContent) {
+      return value.toString().charAt(0) !== "-" ? "+" + value + "%" : value + "%";
+    } else if (selectedBubbleContent === "volume") {
+      return "$" + formatCurrency(volume24h);
+    } else if (selectedBubbleContent === "market cap") {
+      return "$" + formatCurrency(marketCap);
+    } else if (selectedBubbleContent === "price") {
+      return "$" + Math.floor(100 * (price + Number.EPSILON)) / 100;
+    } else {
+      return undefined;
+    }
+  } catch(err) {
+    console.error(value, volume24h, marketCap, price)
   }
 }
 
@@ -1575,7 +1602,7 @@ async function fetchFromBubbleScreener() {
   try {
     const _result = await fetch("http://localhost:3000/bubbles");
     let jsonData = await _result.json();
-    console.log(jsonData);
+    // console.log(jsonData);
     if (!_result["ok"]) {
       throw new Error("HTTP error! Status: " + _result["status"]);
     }
