@@ -2,6 +2,7 @@ var canvas = document["getElementById"]("canvas"),
   ctx = canvas["getContext"]("2d");
 let dpi = window["devicePixelRatio"] || 1;
 let currentSlideIndex = 0;
+let urlImage = 'https://cryptobubbles.net/backend/'
 var startMouseX,
   startMouseY,
   snp_500 = [
@@ -1243,15 +1244,32 @@ function drawBubble(_bubbleData) {
   let value = _bubbleData["value"];
   let nameWidth = ctx.measureText(name)["width"];
   let valueWidth = ctx.measureText(value)["width"];
+
+  // https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D/drawImage
+
+  let imageWidth = 30;
+  let imageHeight = 30;
+  let image = new Image();
+  
+  image.src = urlImage + _bubbleData['image'];
+ 
+  ctx.drawImage(
+    image,
+    _bubbleData['x'] - imageWidth / 2,
+    _bubbleData['y'] - imageHeight / 2 ,
+    imageWidth,
+    imageHeight
+  );
+
   ctx.fillText(
     name,
-    _bubbleData["x"] - nameWidth / 2,
-    _bubbleData["y"] - fontSize / 2
+    _bubbleData['x'] - nameWidth / 2,
+    _bubbleData['y'] - fontSize / 2
   );
   ctx.fillText(
     value,
-    _bubbleData["x"] - valueWidth / 2,
-    _bubbleData["y"] + fontSize / 1.2
+    _bubbleData['x'] - valueWidth / 2,
+    _bubbleData['y'] + fontSize / 1.2
   );
 }
 
@@ -1290,7 +1308,6 @@ function createBubbles() {
       timeRangeDropdown.selectedIndex
     ].value.toLowerCase();
   let selectedBubbleSize = getSelectedBubbleSize();
-  console.log("Selected Bubble Size ->  "+selectedBubbleSize)
   let bubbleRadii = calculateCircleRadii(
     data.map((_item) =>
       "performance" === selectedBubbleSize
@@ -1366,6 +1383,7 @@ function createBubbles() {
       radius: bubbleRadius,
       color: bubbleColor,
       text: _item.ticker,
+      image: _item.image,
       value: bubbleContentValue,
       vx: 2 * (Math.random() - 0.5),
       vy: 2 * (Math.random() - 0.5),
@@ -1665,6 +1683,7 @@ async function fetchFromBubbleScreener() {
         name: _coin.name,
         price: _coin.price,
         ticker: _coin.symbol,
+        image:_coin.image,
         today: _coin.performance.day,
         volume24h: _coin.volume,
         week: _coin.performance.week,
